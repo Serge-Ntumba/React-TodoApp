@@ -1,0 +1,82 @@
+import React, { Component } from "react";
+import { TodoBanner } from "./TodoBanner";
+import { TodoCreator } from "./TodoCreator";
+import { TodoRow } from "./TodoRow";
+import { VisibilityControl } from "./VisibilityControl";
+
+export default class App extends Component { 
+  constructor(props) {
+    super(props);
+    this.state = {
+      userName: "Сержа",
+      todoItems: [
+        {action: "Читать библию", done: false },
+        {action: "Сходить в магазин", done: false },
+        {action: "Звонить Роме", done: true },
+        { action: "Обед с братьями", done: true },
+        { action: "Сделать д/з", done: false }
+      ],
+      showCompleted: true
+    }
+  }
+
+  updateNewTextValue = (event) => {
+    this.setState({ newItemText: event.target.value });
+  }
+
+  createNewTodo = (task) => {
+    if (!this.state.todoItems.find(item => item.action === task)) {
+       this.setState({
+            todoItems: [...this.state.todoItems, { action: task, done: false }]
+                      // for local storage
+                }, () => localStorage.setItem("todos", JSON.stringify(this.state)));
+       }
+    }
+
+  toggleTodo = (todo) => this.setState({ todoItems: this.state.todoItems.map(item => 
+    item.action === todo.action ? {...item, done: !item.done} : item)});
+  todoTableRows = (doneValue) => this.state.todoItems.filter(item => item.done === doneValue).map(item =>
+    <TodoRow key={item.action} item={item} callback={ this.toggleTodo} />
+     );
+
+  componentDidMount = () => {
+    let data = localStorage.getItem("todos");
+    this.setState(data != null ? JSON.parse(data)
+     : { userName: "Сержа",
+         todoItems: [{ action: "Читать библию", done: false },
+                     { action: "Сходить в магазин", done: false },
+                     { action: "Звонить Роме", done: true },
+                     { action: "Обед с братьями", done: true },
+                     { action: "Сделать д/з", done: false }],
+    showCompleted: true
+     });
+    }
+
+  render = () => 
+         <div> 
+           <TodoBanner name={ this.state.userName } tasks={ this.state.todoItems } />
+           <div className="container-fluid" >
+            <TodoCreator callback={ this.createNewTodo } />
+            <table className="table table-striped table-bordered">
+              <thead>
+                <tr><th>Описание</th><th>выполнен</th></tr>
+              </thead>
+              <tbody>{ this.todoTableRows(false) }</tbody>
+            </table>
+            <div className="bg-secondary text-white text-center p-2">
+              <VisibilityControl description="выполненные задачи" isChecked={this.state.showCompleted} callback={ (checked) => this.setState({ showCompleted: checked })
+               } />
+            </div>
+            {
+              this.state.showCompleted && 
+              <table className="table table-stripe table-bordered">
+                <thead>
+                  <tr><th>Описание</th><th>выполнен</th></tr>
+                </thead>
+                <tbody>{this.todoTableRows(true)}</tbody>
+              </table>
+            }
+          </div>
+        </div>
+}
+
